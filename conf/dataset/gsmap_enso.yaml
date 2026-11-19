@@ -5,6 +5,8 @@
 # its corresponding DataLoaders for training and validation.
 # ==============================================================================
 
+input_channels: 4
+
 dataset:
   # Python class to instantiate
   _target_: ainpp_pb_latam.datasets.gsmap_enso.AINPPPBLATAMEnsoDataset
