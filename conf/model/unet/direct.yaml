@@ -1,7 +1,7 @@
 _target_: ainpp_pb_latam.models.unet.forecaster.UNetMultiHorizon
 
 input_timesteps: ${input_timesteps}
-input_channels: ${input_channels}
+input_channels: ${dataset.input_channels}
 output_timesteps: ${output_timesteps}
 output_channels: 1
 features: [64, 128, 256, 512]
