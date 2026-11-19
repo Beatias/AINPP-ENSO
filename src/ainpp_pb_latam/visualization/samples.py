@@ -13,24 +13,25 @@ def save_epoch_sample(model, loader, epoch, device, save_dir="samples"):
     model.eval()
 
     # 1. Get a single validation batch
-    inputs, targets = next(iter(loader))
+    batch = next(iter(loader))
+    inputs, targets = batch[0], batch[1]
 
-    # 2. Prepare data (same logic as training)
-    inputs = inputs.squeeze(2).to(device)  # [Batch, T_in, H, W]
-    targets = targets.squeeze(2).to(device)  # [Batch, T_out, H, W]
-    print(f"Max target value (mm/h): {targets.max().item():.2f}, Shape: {targets.shape}")
+    # 2. Prepare data exactly as in training.
+    # ENSO channels mode: [B, Tin, 4, H, W]
+    # Standard dataset:    [B, Tin, 1, H, W]
+    inputs = inputs.to(device)
+    targets = targets.to(device)
+    print(
+        f"Max target value (mm/h): {targets.max().item():.2f}, "
+        f"Shape: {targets.shape}"
+    )
 
     with torch.no_grad():
-        # Log input (as model expects)
-        # inputs_log = torch.log1p(inputs)
-        # Log Prediction
-        # add dimension for channel
-        inputs = inputs.unsqueeze(2)  # [Batch, T_in, 1, H, W]
         outputs_log = model(inputs)
 
         # 3. Revert to mm/h for visualization (expm1)
         preds_mm = outputs_log.cpu().numpy()
-        targets_mm = targets.cpu().numpy()  # Original Targets are already in mm/h
+        targets_mm = targets[:, :, 0].cpu().numpy()
 
     # 4. Configurar o Plot
     batch_idx = 0  # Pega a primeira amostra do batch
