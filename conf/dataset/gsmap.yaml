@@ -11,7 +11,6 @@ dataset:
   
   # Path to the Zarr store
   zarr_path: "/content/MyDrive/AINPP/AINPP-PB-LATAM-SAMPLE.zarr"
-  csv_path: "/content/MyDrive/AINPP/ENSO/ONI_classificado.csv"
   
   # --------------------------------------------------------------------------
   # Global Variables (Interpolation)
