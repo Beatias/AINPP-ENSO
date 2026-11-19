@@ -9,6 +9,10 @@ from omegaconf import DictConfig, OmegaConf
 
 from ainpp_pb_latam.datasets import NowcastingDataset
 from ainpp_pb_latam.engine import run_training
+from ainpp_pb_latam.evaluation.checkpoint import (
+    dataset_config_for_frame_channels,
+    infer_unet_frame_channels,
+)
 from ainpp_pb_latam.evaluation.evaluator import Evaluator
 from ainpp_pb_latam.inference import Inferencer
 from ainpp_pb_latam.losses import HybridLoss  # noqa: F401
@@ -84,7 +88,38 @@ def _run_evaluate(cfg: DictConfig) -> None:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    state = None
+    checkpoint_path = Path(cfg.checkpoint) if cfg.get("checkpoint") else None
+    if checkpoint_path is not None and checkpoint_path.exists():
+        LOG.info("Loading checkpoint from %s", checkpoint_path)
+        state = torch.load(checkpoint_path, map_location=device)
+        if isinstance(state, dict) and "state_dict" in state:
+            state = state["state_dict"]
+
+        frame_channels = infer_unet_frame_channels(
+            state, int(cfg.model.input_timesteps)
+        )
+        if frame_channels is not None:
+            config_dir = Path(__file__).resolve().parent / "conf" / "dataset"
+            cfg.dataset = dataset_config_for_frame_channels(
+                cfg.dataset, frame_channels, config_dir
+            )
+            if "input_channels" in cfg.model:
+                cfg.model.input_channels = frame_channels
+            LOG.info(
+                "Checkpoint expects %s input channel(s) per timestep; selected dataset config %s",
+                frame_channels,
+                cfg.dataset.dataset._target_,
+            )
+    elif checkpoint_path is not None:
+        LOG.warning("Checkpoint not found at %s; evaluating fresh model", checkpoint_path)
+
     ds_kwargs = cfg.dataset.overrides.get("test", {}) if cfg.dataset.get("overrides") else {}
+    if OmegaConf.is_config(ds_kwargs):
+        ds_kwargs = OmegaConf.to_container(ds_kwargs, resolve=True)
+    else:
+        ds_kwargs = dict(ds_kwargs)
+    ds_kwargs.setdefault("group", "test")
     test_dataset = instantiate(cfg.dataset.dataset, **ds_kwargs)
     test_loader = DataLoader(
         dataset=test_dataset,
@@ -93,14 +128,8 @@ def _run_evaluate(cfg: DictConfig) -> None:
     )
 
     model = instantiate(cfg.model).to(device)
-    if cfg.get("checkpoint"):
-        checkpoint_path = Path(cfg.checkpoint)
-        if checkpoint_path.exists():
-            LOG.info("Loading checkpoint from %s", checkpoint_path)
-            state = torch.load(checkpoint_path, map_location=device)
-            model.load_state_dict(state)
-        else:
-            LOG.warning("Checkpoint not found at %s; evaluating fresh model", checkpoint_path)
+    if state is not None:
+        model.load_state_dict(state)
 
     evaluator = Evaluator(
         model=model,
