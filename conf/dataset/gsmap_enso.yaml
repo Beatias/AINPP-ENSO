@@ -7,7 +7,7 @@
 
 dataset:
   # Python class to instantiate
-  _target_: ainpp_pb_latam.datasets.gsmap.AINPPPBLATAMDataset
+  _target_: ainpp_pb_latam.datasets.gsmap_enso.AINPPPBLATAMDataset
   
   # Path to the Zarr store
   zarr_path: "/content/MyDrive/AINPP/AINPP-PB-LATAM-SAMPLE.zarr"
