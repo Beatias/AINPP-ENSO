@@ -7,11 +7,13 @@
 
 dataset:
   # Python class to instantiate
-  _target_: ainpp_pb_latam.datasets.gsmap_enso.AINPPPBLATAMDataset
+  _target_: ainpp_pb_latam.datasets.gsmap_enso.AINPPPBLATAMEnsoDataset
   
   # Path to the Zarr store
   zarr_path: "/content/MyDrive/AINPP/AINPP-PB-LATAM-SAMPLE.zarr"
-  csv_path: "/content/MyDrive/AINPP/ENSO/ONI_classificado.csv"
+  enso_csv: "/content/MyDrive/AINPP/ENSO/ONI_classificado.csv"
+  enso_mode: "channels"
+  enso_reference: "last_input"
   
   # --------------------------------------------------------------------------
   # Global Variables (Interpolation)
