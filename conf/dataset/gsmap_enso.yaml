@@ -12,8 +12,8 @@ dataset:
   _target_: ainpp_pb_latam.datasets.gsmap_enso.AINPPPBLATAMEnsoDataset
   
   # Path to the Zarr store
-  zarr_path: "/content/drive/MyDrive/AINPP/AINPP-PB-LATAM-SAMPLE.zarr"
-  enso_csv: "/content/drive/MyDrive/AINPP/ENSO/ONI_classificado.csv"
+  zarr_path: "/home/iasmin/Documentos/AINPP/AINPP-PB-LATAM-SAMPLE.zarr"
+  enso_csv: "/home/iasmin/AINPP-ENSO/ONI_classificado.csv"
   enso_mode: "channels"
   enso_reference: "last_input"
   
