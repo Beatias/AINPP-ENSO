@@ -21,6 +21,7 @@ import optuna
 import torch
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
+import yaml
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader, get_worker_info
 
@@ -53,6 +54,12 @@ def make_cfg(a, dataset, p):
     if "features" in cfg.model:  # largura do U-Net
         base = p.get("width", 64)
         cfg.model.features = [base * 2**i for i in range(4)]
+    OmegaConf.set_struct(cfg, False)
+    for kv in a.set:  # overrides livres, ex.: dataset.dataset.patch_height=50
+        k, v = kv.split("=", 1)
+        OmegaConf.update(cfg, k, yaml.safe_load(v), force_add=True)
+    if a.model.startswith("afno") and "img_size" not in cfg.model:
+        cfg.model.img_size = [d.dataset.patch_height, d.dataset.patch_width]
     return cfg
 
 
@@ -196,6 +203,7 @@ if __name__ == "__main__":
     ap.add_argument("--train-steps", type=int, default=150)  # batches/época (None = config)
     ap.add_argument("--val-steps", type=int, default=100)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--set", nargs="*", default=[], help="overrides: chave=valor ...")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     ap.add_argument("--out", default="final_enso_vs_noenso.json")
